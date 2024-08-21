@@ -305,7 +305,11 @@ where
                     }
                     FindTrailers::IncompleteBuf => continue,
                     FindTrailers::Done(len) => {
-                        Poll::Ready(Some(Ok(Frame::data(buf.split_to(len).freeze()))))
+                        if len > 0 {
+                            Poll::Ready(Some(Ok(Frame::data(buf.split_to(len).freeze()))))
+                        } else {
+                            Poll::Ready(None)
+                        }
                     }
                 };
             }
