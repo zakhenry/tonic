@@ -14,10 +14,10 @@ use tokio_stream::wrappers::TcpListenerStream;
 use tonic::body::BoxBody;
 use tonic::transport::Server;
 
-use integration::pb::{test_server::TestServer, Input, Output};
+use integration::pb::{test_server::TestServer, Input, Output, test_server, test_client};
 use integration::Svc;
 use tonic::Status;
-use tonic_web::GrpcWebLayer;
+use tonic_web::{GrpcWebClientLayer, GrpcWebLayer};
 
 #[tokio::test]
 async fn binary_request() {
@@ -63,6 +63,39 @@ async fn text_request() {
 
     assert_eq!(message, expected);
     assert_eq!(&trailers[..], b"grpc-status:0\r\n");
+}
+
+
+#[tokio::test]
+async fn tonic_request() {
+    let server_url = spawn().await;
+    let client = Client::builder(TokioExecutor::new()).build_http();
+
+    let svc = tower::ServiceBuilder::new()
+        .layer(GrpcWebClientLayer::new())
+        .service(client);
+
+    let mut client = test_client::TestClient::with_origin(
+        svc,
+        server_url
+            .try_into()
+            .unwrap(),
+    );
+
+    let res = client.unary_call(Input {
+        id: 1,
+        desc: "one".to_owned(),
+    }).await.unwrap();
+
+    let expected = Output {
+        id: 1,
+        desc: "one".to_owned(),
+    };
+
+    // assert_eq!(res.into_inner(), expected);
+    let trailers = res.metadata();
+    dbg!(trailers);
+    // assert_eq!(&trailers[..], b"grpc-status:0\r\n");
 }
 
 async fn spawn() -> String {

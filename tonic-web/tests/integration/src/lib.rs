@@ -21,10 +21,15 @@ impl Test for Svc {
         if &req.desc == "boom" {
             Err(Status::invalid_argument("invalid boom"))
         } else {
-            Ok(Response::new(Output {
+
+            let mut res = Response::new(Output {
                 id: req.id,
                 desc: req.desc,
-            }))
+            });
+
+            res.metadata_mut().insert("meta1", "metavalue".parse().unwrap());
+
+            Ok(res)
         }
     }
 
