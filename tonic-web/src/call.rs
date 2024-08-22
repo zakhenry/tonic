@@ -252,7 +252,12 @@ where
         cx: &mut Context<'_>,
     ) -> Poll<Option<Result<Frame<Self::Data>, Self::Error>>> {
         if self.client && self.direction == Direction::Decode {
+
             let mut me = self.as_mut();
+
+            if me.project().decoded.is_empty() {
+                return Poll::Ready(None)
+            }
 
             loop {
                 match ready!(me.as_mut().poll_decode(cx)) {
