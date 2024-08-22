@@ -41,14 +41,32 @@ impl Test for Svc {
     ) -> Result<Response<Self::ServerStreamStream>, Status> {
         let req = req.into_inner();
 
-        Ok(Response::new(Box::pin(stream::iter(vec![1, 2]).map(
+        let output = stream::iter(vec![1, 2]).map(
             move |n| {
                 Ok(Output {
                     id: req.id,
                     desc: format!("{}-{}", n, req.desc),
                 })
             },
-        ))))
+        );
+
+        let mut response = Response::new(Box::pin(output) as Self::ServerStreamStream);
+
+        // Set trailing metadata
+        let mut trailers = response.metadata_mut();
+        trailers.append("key1", "value1".parse().unwrap());
+        trailers.append("key2", "value2".parse().unwrap());
+
+        Ok(response)
+
+        // Ok(Response::new(Box::pin(stream::iter(vec![1, 2]).map(
+        //     move |n| {
+        //         Ok(Output {
+        //             id: req.id,
+        //             desc: format!("{}-{}", n, req.desc),
+        //         })
+        //     },
+        // ))))
     }
 
     async fn client_stream(

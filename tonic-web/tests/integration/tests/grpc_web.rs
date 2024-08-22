@@ -10,6 +10,7 @@ use hyper_util::client::legacy::Client;
 use hyper_util::rt::TokioExecutor;
 use prost::Message;
 use tokio::net::TcpListener;
+use tokio_stream::StreamExt;
 use tokio_stream::wrappers::TcpListenerStream;
 use tonic::body::BoxBody;
 use tonic::transport::Server;
@@ -67,7 +68,7 @@ async fn text_request() {
 
 
 #[tokio::test]
-async fn tonic_request() {
+async fn tonic_request_unary() {
     let server_url = spawn().await;
     let client = Client::builder(TokioExecutor::new()).build_http();
 
@@ -96,6 +97,42 @@ async fn tonic_request() {
     let trailers = res.metadata();
     dbg!(trailers);
     // assert_eq!(&trailers[..], b"grpc-status:0\r\n");
+}
+
+#[tokio::test]
+async fn tonic_request_server_stream() {
+    let server_url = spawn().await;
+    let client = Client::builder(TokioExecutor::new()).build_http();
+
+    let svc = tower::ServiceBuilder::new()
+        .layer(GrpcWebClientLayer::new())
+        .service(client);
+
+    let mut client = test_client::TestClient::with_origin(
+        svc,
+        server_url
+            .try_into()
+            .unwrap(),
+    );
+
+    let mut response = client.server_stream(Input {
+        id: 1,
+        desc: "one".to_owned(),
+    }).await.unwrap().into_inner();
+
+    while let Some(res) = response.next().await {
+        println!("Response = {:?}", res.unwrap());
+    //
+    // let expected = Output {
+    //     id: 1,
+    //     desc: "one".to_owned(),
+    // };
+    }
+
+    // Access trailers
+    let trailers = response.trailers().await.unwrap();
+
+    dbg!(trailers);
 }
 
 async fn spawn() -> String {
