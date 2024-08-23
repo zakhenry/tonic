@@ -13,7 +13,7 @@ use std::{
 };
 use tokio_stream::{Stream, StreamExt};
 
-pub(crate) fn encode_server<T, U>(
+pub fn encode_server<T, U>(
     encoder: T,
     source: U,
     compression_encoding: Option<CompressionEncoding>,
@@ -268,7 +268,7 @@ enum Role {
 
 #[pin_project]
 #[derive(Debug)]
-pub(crate) struct EncodeBody<S> {
+pub struct EncodeBody<S> {
     #[pin]
     inner: S,
     state: EncodeState,
