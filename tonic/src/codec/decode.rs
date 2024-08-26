@@ -54,7 +54,7 @@ enum Direction {
 }
 
 impl<T> Streaming<T> {
-    pub(crate) fn new_response<B, D>(
+    pub fn new_response<B, D>(
         decoder: D,
         body: B,
         status_code: StatusCode,
