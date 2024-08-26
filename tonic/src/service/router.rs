@@ -1,7 +1,7 @@
 use crate::{
     body::{boxed, BoxBody},
     metadata::GRPC_CONTENT_TYPE,
-    server::NamedService,
+    server::RoutedService
 };
 use http::{HeaderName, HeaderValue, Request, Response};
 use std::{
@@ -30,7 +30,7 @@ impl RoutesBuilder {
     pub fn add_service<S>(&mut self, svc: S) -> &mut Self
     where
         S: Service<Request<BoxBody>, Response = Response<BoxBody>, Error = Infallible>
-            + NamedService
+            + RoutedService
             + Clone
             + Send
             + 'static,
@@ -61,7 +61,7 @@ impl Routes {
     pub fn new<S>(svc: S) -> Self
     where
         S: Service<Request<BoxBody>, Response = Response<BoxBody>, Error = Infallible>
-            + NamedService
+            + RoutedService
             + Clone
             + Send
             + 'static,
@@ -80,7 +80,7 @@ impl Routes {
     pub fn add_service<S>(mut self, svc: S) -> Self
     where
         S: Service<Request<BoxBody>, Response = Response<BoxBody>, Error = Infallible>
-            + NamedService
+            + RoutedService
             + Clone
             + Send
             + 'static,
@@ -173,7 +173,7 @@ impl Future for RoutesFuture {
 #[cfg(test)]
 mod tests {
     use crate::body::BoxBody;
-    use crate::server::NamedService;
+    use crate::server::{RoutedService};
     use crate::service::Routes;
     use std::convert::Infallible;
     use std::fmt::Debug;
@@ -202,9 +202,7 @@ mod tests {
             }
         }
 
-        impl NamedService for Svc {
-            const NAME: &'static str = "test";
-
+        impl RoutedService for Svc {
             fn route_path() -> String {
                 "/custom-route".to_string()
             }

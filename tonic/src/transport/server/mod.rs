@@ -39,7 +39,7 @@ use crate::transport::Error;
 use self::service::{RecoverError, ServerIo};
 use super::service::GrpcTimeout;
 use crate::body::{boxed, BoxBody};
-use crate::server::NamedService;
+use crate::server::{NamedService, RoutedService};
 use bytes::Bytes;
 use http::{Request, Response};
 use http_body_util::BodyExt;
@@ -374,7 +374,7 @@ impl<L> Server<L> {
     pub fn add_service<S>(&mut self, svc: S) -> Router<L>
     where
         S: Service<Request<BoxBody>, Response = Response<BoxBody>, Error = Infallible>
-            + NamedService
+            + RoutedService
             + Clone
             + Send
             + 'static,
@@ -395,7 +395,7 @@ impl<L> Server<L> {
     pub fn add_optional_service<S>(&mut self, svc: Option<S>) -> Router<L>
     where
         S: Service<Request<BoxBody>, Response = Response<BoxBody>, Error = Infallible>
-            + NamedService
+            + RoutedService
             + Clone
             + Send
             + 'static,
@@ -696,7 +696,7 @@ impl<L> Router<L> {
     pub fn add_service<S>(mut self, svc: S) -> Self
     where
         S: Service<Request<BoxBody>, Response = Response<BoxBody>, Error = Infallible>
-            + NamedService
+            + RoutedService
             + Clone
             + Send
             + 'static,
@@ -715,7 +715,7 @@ impl<L> Router<L> {
     pub fn add_optional_service<S>(mut self, svc: Option<S>) -> Self
     where
         S: Service<Request<BoxBody>, Response = Response<BoxBody>, Error = Infallible>
-            + NamedService
+            + RoutedService
             + Clone
             + Send
             + 'static,
